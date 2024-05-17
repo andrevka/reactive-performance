@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  reactive-client:
+    image: docker.io/library/hello-reactive-client:0.0.1-SNAPSHOT
+    environment:
+      hello_server: http://server:8080
+    deploy:
+      resources:
+        limits:
+          memory: 1GB
+    ports:
+      - 8082:8082
+    cpuset: "0-3"
+
+  client:
+    image: docker.io/library/hello-client:0.0.1-SNAPSHOT
+    deploy:
+      resources:
+        limits:
+          memory: 16G
+    environment:
+      hello_server: http://server:8080
+    cpuset: "0-3"
+
+  server:
+    image: docker.io/library/hello-reactive-server:0.0.1-SNAPSHOT
+    cpuset: "8-11"
+
+  perftest:
+    build:
+      context: load-test
+      dockerfile: Dockerfile
+    cpuset: "11-15"
+    environment:
+      TEST_SERVER: http://client:8080/greet
+    depends_on:
+      - client
+      - reactive-client
+      - server
